@@ -1,0 +1,18 @@
+version: "3.7"
+
+services:
+  pgi:
+    image: &pgi pgi
+    build:
+      context: ./..
+      dockerfile: ./ci/Dockerfile
+    volumes:
+      - ./..:/app
+    command: sh -c "sleep 5 && mkdir -p build && cd build && cmake .. && make && ./main"
+
+  postgres_image:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.db
+    env_file:
+      - .env
