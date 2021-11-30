@@ -8,6 +8,7 @@ set(PGI_CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/config/")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config_dir.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/config_dir.hpp)
 
 list(APPEND list_include_dirs ${CMAKE_CURRENT_SOURCE_DIR}/utl)
+list(APPEND list_include_dirs ${CMAKE_CURRENT_SOURCE_DIR})
 
 file(GLOB cpp_source_files
     "pgi.hpp"
