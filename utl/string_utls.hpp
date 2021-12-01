@@ -1,6 +1,8 @@
+#pragma once
 #include <string>
 #include <iostream>
 #include <memory>
+#include "datetime.hpp"
 
 namespace utl {
 
@@ -40,6 +42,41 @@ template <typename... Args>
 std::string string_format(std::string fmt, Args&&... args)
 {
     return stringFormatInternal(fmt, convert(std::forward<Args>(args))...);
+}
+
+
+template <typename T>
+std::string convert_to_string(T val)
+{
+    return std::to_string(val);
+}
+
+template <typename T>
+std::string convert_to_string(time_point_t val)
+{
+    std::stringstream ss;
+    ss << "'" << ISO_8601(val) << "'";
+    return ss.str();
+}
+
+template <typename T>
+std::string convert_to_string(std::string val)
+{
+    std::stringstream ss;
+    ss << "'" << val << "'";
+    return ss.str();
+}
+
+std::string truncate(std::string str, size_t width, bool show_ellipsis = false)
+{
+    if (str.length() > width)
+    {
+        if (show_ellipsis)
+            return str.substr(0, width) + "...";
+        else
+            return str.substr(0, width);
+    }
+    return str;
 }
 
 }  // namespace utl

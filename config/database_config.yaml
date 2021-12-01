@@ -9,4 +9,14 @@ connection:
 tables:
   - public.test_table
   - public.test_table2
+  - public.test_table3
+
+
+field_length_mapping:
+  timestamptz: 26
+  timestamp: 23
+  float8: 5
+  int2: 5
+  int8: 5 
+  varchar: 12
 

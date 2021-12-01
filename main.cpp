@@ -8,6 +8,7 @@ using namespace pgi;
 
 int main()
 {
+    using namespace std::chrono_literals;
     DatabaseWorker dbw(
         pgi_test::pgi_config_dir + "database_config.yaml", pgi_test::pgi_config_dir + "database_config_out.yaml");
 
@@ -28,17 +29,22 @@ int main()
     columns2.push_back("test_double2");
     columns2.push_back("test_double3");
     pqxx::result r = dbw.select("public.test_table2", columns2);
-    int const num_rows = std::size(r);
-    for (int rownum=0; rownum < num_rows; ++rownum)
-    {
-        pqxx::row const row = r[rownum];
-        int const num_cols = std::size(row);
-        for (int colnum=0; colnum < num_cols; ++colnum)
-        {
-            pqxx::field const field = row[colnum];
-            std::cout << field.c_str() << '\t';
-        }
-        std::cout << std::endl;
-    }
+
+
+    // Most general method to insert a row
+    std::map<std::string, double> double_cols;
+    double_cols["test_double1"] = 1.1;
+    double_cols["test_double2"] = 2.2;
+    double_cols["test_double3"] = 3.3;
+    std::map<std::string, std::string> string_cols;
+    string_cols["test_string"] = "Hello world!";
+    std::map<std::string, time_point_t> time_cols;
+    time_cols["time"] = tp;
+    time_cols["time2"] = tp - 50s;
+    dbw.insert_from_maps("public.test_table3", double_cols, string_cols, time_cols);
+    dbw.insert_from_maps("public.test_table3", double_cols, string_cols, time_cols);
+    dbw.insert_from_maps("public.test_table3", double_cols, string_cols, time_cols);
+    dbw.print("public.test_table3");
+
     return 0;
 }

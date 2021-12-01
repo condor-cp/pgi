@@ -3,8 +3,9 @@
 #include <fstream>
 #include "string_utls.hpp"
 #include "datetime.hpp"
+#include "map_utls.hpp"
 #include <chrono>
-
+#include <iomanip>
 
 namespace pgi {
 
@@ -26,7 +27,8 @@ public:
 
     pqxx::result select(const std::string& table_name,
         const std::vector<std::string> fields = std::vector<std::string>(),
-        const std::string& condition = "")
+        const std::string& condition = "",
+        const int& limit = 100)
     {
         explore_if_unknown(table_name);
         std::stringstream ss;
@@ -42,10 +44,70 @@ public:
         ss << " FROM " << table_name;
         if (!condition.empty())
             ss << " WHERE " << condition;
-
+        ss << " LIMIT " << limit;
         pqxx::result r = execute(ss.str());
         return r;
     }
+
+    pqxx::result select_all_columns(const std::string& table_name, const std::string& condition = "")
+    {
+        return select(table_name, std::vector<std::string>(), condition);
+    }
+
+    void print(pqxx::result r)
+    {
+        bool header_added = false;
+        std::stringstream ss;
+        int const num_rows = std::size(r);
+        for (int rownum = 0; rownum < num_rows; ++rownum)
+        {
+            pqxx::row const row = r[rownum];
+            ss << print_row(row, !header_added);
+            if (!header_added)
+                header_added = true;
+            ss << "\n";
+        }
+        std::cout << ss.str();
+    }
+
+    std::string print_row(const pqxx::row& row, bool header = false)
+    {
+        const char fill = ' ';
+        const char separator[3] = " |";
+        std::stringstream ss;
+        std::stringstream headerss;
+        int const num_cols = std::size(row);
+        for (int colnum = 0; colnum < num_cols; ++colnum)
+        {
+            pqxx::field const field = row[colnum];
+            std::string column_name = field.name();
+            std::string column_type = get_typname_from_oid(field.type());
+            YAML::Node field_length_mapping = db_config_["field_length_mapping"];
+            int field_width;
+            if (field_length_mapping[column_type])
+                field_width = field_length_mapping[column_type].as<int>();
+            else
+                field_width = 10;
+            field_width = std::max<int>(column_name.length(), field_width);
+            ss << std::left << std::setw(field_width) << std::setfill(fill) << utl::truncate(field.c_str(), field_width)
+               << separator;
+            if (header)
+                headerss << std::left << std::setw(field_width) << std::setfill(fill)
+                         << utl::truncate(column_name, field_width) << separator;
+        }
+        if (header)
+        {
+            headerss << "\n" << ss.str();
+            return headerss.str();
+        }
+        else
+        {
+            return ss.str();
+        }
+    }
+
+    void print(const std::string& table_name) { return print(select_all_columns(table_name)); }
+
 
     /// Inserts a row in a defined table from a full set of values.
     /// The order of values must be the same as in the table definition.
@@ -61,6 +123,30 @@ public:
         ss << ')';
         execute(ss.str());
     }
+
+    /// Inserts a row in a defined table from a multiple std::map<std::string, T>.
+    template <typename... Args>
+    void insert_from_maps(const std::string& table_name, Args... maps)
+    {
+        std::map<std::string, std::string> merged_maps = utl::merge_maps(maps...);
+        std::stringstream columns, values, ss;
+        columns << "(";
+        values << "(";
+        for (auto const& [key, val] : merged_maps)
+        {
+            columns << key << ", ";
+            values << val << ", ";
+        }
+        columns.seekp(-2, columns.cur);
+        columns << ")";
+        values.seekp(-2, values.cur);
+        values << ")";
+
+        ss << "INSERT INTO " << table_name << " " << columns.str() << "VALUES " << values.str();
+        explore_if_unknown(table_name);
+        execute(ss.str());
+    }
+
 
     // Specialization for vectors
     template <typename T>
@@ -145,15 +231,12 @@ private:
             db_config_["tables_details"][table_name]["table"] = segment;
 
 
-            pqxx::row row;
             pqxx::result r = execute(utl::string_format("SELECT * FROM %s LIMIT 0", table_name));
 
             for (size_t i = 0; i < size_t(r.columns()); i++)
             {
-                row =
-                    execute1(utl::string_format("SELECT t.typname FROM pg_type t WHERE t.oid = %d", r.column_type(i)));
                 db_config_["tables_details"][table_name]["columns"][std::string(r.column_name(i))] =
-                    row[0].as<std::string>();
+                    get_typname_from_oid(r.column_type(i));
             }
 
             r = execute(utl::string_format(
@@ -174,6 +257,13 @@ private:
         {
             std::cerr << e.what() << '\n';
         }
+    }
+
+    std::string get_typname_from_oid(int oid)
+    {
+        pqxx::row row;
+        row = execute1(utl::string_format("SELECT t.typname FROM pg_type t WHERE t.oid = %d", oid));
+        return row[0].as<std::string>();
     }
 
 
