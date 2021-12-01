@@ -28,7 +28,7 @@ public:
     pqxx::result select(const std::string& table_name,
         const std::vector<std::string> fields = std::vector<std::string>(),
         const std::string& condition = "",
-        const int& limit = 100)
+        const int& limit = 500)
     {
         explore_if_unknown(table_name);
         std::stringstream ss;
@@ -46,6 +46,10 @@ public:
             ss << " WHERE " << condition;
         ss << " LIMIT " << limit;
         pqxx::result r = execute(ss.str());
+
+        if (std::size(r) == limit)
+            std::cout << "Warning : fetch reached maximum number (" << limit << ")" << std::endl;
+
         return r;
     }
 
@@ -143,6 +147,22 @@ public:
         values << ")";
 
         ss << "INSERT INTO " << table_name << " " << columns.str() << "VALUES " << values.str();
+        explore_if_unknown(table_name);
+        execute(ss.str());
+    }
+
+    /// Inserts a row in a defined table from a multiple std::map<std::string, T>.
+    template <typename... Args>
+    void update_from_maps(const std::string& table_name, const std::string& condition, Args... maps)
+    {
+        std::map<std::string, std::string> merged_maps = utl::merge_maps(maps...);
+        std::stringstream ss;
+        ss << "UPDATE " << table_name << " SET ";
+        for (auto const& [key, val] : merged_maps)
+            ss << key << "=" << val << ", ";
+
+        ss.seekp(-2, ss.cur);
+        ss << " WHERE " << condition;
         explore_if_unknown(table_name);
         execute(ss.str());
     }
