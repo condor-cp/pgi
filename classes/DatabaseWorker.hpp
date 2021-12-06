@@ -205,7 +205,7 @@ public:
         execute(ss.str());
     }
 
-private:
+protected:
     void connect(YAML::Node connection_config)
     {
         try
