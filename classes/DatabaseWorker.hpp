@@ -333,6 +333,7 @@ protected:
 
     std::string insert_statement_first_part(const std::string& table_name)
     {
+        explore_if_unknown(table_name);
         std::stringstream ss;
         ss << "INSERT INTO " << table_name << "(";
         for (YAML::const_iterator it = db_config_["tables_details"][table_name]["columns"].begin();
