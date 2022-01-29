@@ -7,15 +7,32 @@ pgi is a header only library built on top of [libpqxx](https://github.com/jtv/li
 1. [libpqxx](https://github.com/jtv/libpqxx.git) installed
 2. [cpp-yaml](https://github.com/jbeder/yaml-cpp.git) installed
 
+## Installation
+
+Installation is done using cmake. At the root of the source directory, run 
+
+```
+mkdir build && cd build && cmake .. && make install
+```
+
 ## How to use
+A full standalone example can be found in the [example/](example/) directory. Follow those steps to reproduce :
 
-1. Create a config file with yaml format. An example is given in [config/database_config.yaml](config/database_config.yaml). See [config file fields](#configuration-file-fields) for details.
+1. In CMakeLists.txt of your project, import the pgi library like so :
+```
+cmake_minimum_required(VERSION 3.10)
+find_package(pgi CONFIG REQUIRED)
+add_executable(main main.cpp)
+target_link_libraries(main pgi)
+```
 
-2. Include "pgi.h"
+2. Create a config file with yaml format. An example is given in [config/database_config.yaml](example/config/database_config.yaml). See [config file fields](#configuration-file-fields) for details.
 
-3. Create a DatabaseWorker instance, by providing a path to the configuration file.
+3. Include <pgi.hpp>
 
-4. Use DatabaseWorker methods. For example, insert columns from multiple std::map and print the content of the table :
+4. Create a DatabaseWorker instance, by providing a path to the configuration file.
+
+5. Use DatabaseWorker methods. For example, insert columns from multiple std::map and print the content of the table :
 
 ```
     DatabaseWorker dbw(

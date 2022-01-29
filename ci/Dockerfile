@@ -17,7 +17,12 @@ RUN cd libpqxx && mkdir build && cd build && cmake .. && make install
 RUN git clone --depth 1 https://github.com/jbeder/yaml-cpp.git --branch master --single-branch
 RUN cd yaml-cpp && mkdir build && cd build && cmake .. && make install
 
-# Copy directory content to app
+# Copy directory content to libsrc and install pgi
+RUN mkdir /libsrc/pgi 
+COPY . /libsrc/pgi
+RUN cd pgi && mkdir -p build && cd build && cmake .. && make install
+
+# Copy example directory content to app and try to run
 RUN mkdir /app
 WORKDIR /app 
-COPY . /app
+COPY ./example /app

@@ -3,6 +3,6 @@
 namespace pgi_test {
 
 // the following path will be set automatically during building (do not copy this file manually!)
-static const std::string pgi_config_dir = "${PGI_CONFIG_DIR}";
+static const std::string pgi_config_dir = "${CONFIG_DIR}";
 
 }  // namespace pgi_test

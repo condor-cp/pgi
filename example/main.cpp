@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "pgi.hpp"
+#include <pgi.hpp>
 #include "config_dir.hpp"
 #include <chrono>
 
