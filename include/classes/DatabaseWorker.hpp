@@ -44,7 +44,7 @@ public:
         {
             ss << "SELECT " << fields[0];
             for (size_t i = 1; i < fields.size(); i++)
-                ss << ", " << fields[i];
+                ss << ", " << "\"" << fields[i] << "\"";
         }
 
         ss << " FROM " << table_name;
@@ -144,7 +144,7 @@ public:
         values << "(";
         for (auto const& [key, val] : merged_maps)
         {
-            columns << key << ", ";
+            columns << "\"" << key << "\", ";
             values << val << ", ";
         }
         columns.seekp(-2, columns.cur);
@@ -165,7 +165,7 @@ public:
         std::stringstream ss;
         ss << "UPDATE " << table_name << " SET ";
         for (auto const& [key, val] : merged_maps)
-            ss << key << "=" << val << ", ";
+            ss << "\"" << key << "\"" << "=" << val << ", ";
 
         ss.seekp(-2, ss.cur);
         ss << " WHERE " << condition;
@@ -350,7 +350,7 @@ protected:
                     db_config_["tables_details"][table_name]["primary_key"].as<std::string>()) ||
                 (it->second.as<std::string>().find("timestamp") != std::string::npos))
             {
-                ss << it->first.as<std::string>() << ", ";
+                ss << "\"" << it->first.as<std::string>() << "\", ";
             }
         }
 
