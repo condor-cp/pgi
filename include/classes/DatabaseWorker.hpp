@@ -12,17 +12,23 @@ namespace pgi {
 class DatabaseWorker
 {
 public:
-    DatabaseWorker(const std::string& configuration_file, const std::string& output_file = "")
+    /// Constructor requires a connection file and optionnaly a configuration file defining the tables to explore.
+    DatabaseWorker(const std::string& connection_file, std::string configuration_file = "")
     {
-        db_config_ = YAML::LoadFile(configuration_file);
-        YAML::Node connection_config = db_config_["connection"];
+        // Step 1 : Connection
+        YAML::Node connection_config_root =  YAML::LoadFile(connection_file);
+        YAML::Node connection_config = connection_config_root["connection"];
         connect(connection_config);
 
-        YAML::Node tables = db_config_["tables"];
-        explore_tables(tables);
-
-        if (!output_file.empty())
-            drop_yaml(output_file);
+        // Step 2 (optionnal): Explore tables
+        if(configuration_file.empty())
+            configuration_file = connection_file;
+        db_config_ = YAML::LoadFile(configuration_file);
+        if(db_config_["tables"])
+        {
+            YAML::Node tables = db_config_["tables"];
+            explore_tables(tables);
+        }
     }
 
     pqxx::result select(const std::string& table_name,
@@ -317,7 +323,7 @@ protected:
         return r;
     }
 
-    void drop_yaml(const std::string& output_file)
+    void drop_config_yaml(const std::string& output_file)
     {
         try
         {

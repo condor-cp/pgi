@@ -9,8 +9,7 @@ using namespace pgi;
 int main()
 {
     using namespace std::chrono_literals;
-    DatabaseWorker dbw(
-        pgi_test::pgi_config_dir + "database_config.yaml", pgi_test::pgi_config_dir + "database_config_out.yaml");
+    DatabaseWorker dbw(pgi_test::pgi_config_dir + "database_config.yaml");
 
     std::vector<std::string> columns;
     columns.push_back("time");
