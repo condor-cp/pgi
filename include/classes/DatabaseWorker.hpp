@@ -34,7 +34,7 @@ public:
     pqxx::result select(const std::string& table_name,
         const std::vector<std::string> fields = std::vector<std::string>(),
         const std::string& condition = "",
-        const int& limit = 500)
+        const int& limit = 10000)
     {
         explore_if_unknown(table_name);
         std::stringstream ss;
