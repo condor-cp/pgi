@@ -34,6 +34,7 @@ public:
     pqxx::result select(const std::string& table_name,
         const std::vector<std::string> fields = std::vector<std::string>(),
         const std::string& condition = "",
+        const std::string& order_by = "",
         const int& limit = 10000)
     {
         explore_if_unknown(table_name);
@@ -50,6 +51,8 @@ public:
         ss << " FROM " << table_name;
         if (!condition.empty())
             ss << " WHERE " << condition;
+        if(!order_by.empty())
+            ss << " ORDER BY " << order_by;
         ss << " LIMIT " << limit;
         pqxx::result r = execute(ss.str());
 
