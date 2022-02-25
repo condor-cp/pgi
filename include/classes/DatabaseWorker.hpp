@@ -42,7 +42,7 @@ public:
             ss << "SELECT *";
         else
         {
-            ss << "SELECT " << fields[0];
+            ss << "SELECT \"" << fields[0] << "\"";
             for (size_t i = 1; i < fields.size(); i++)
                 ss << ", " << "\"" << fields[i] << "\"";
         }
