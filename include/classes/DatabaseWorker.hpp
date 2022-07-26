@@ -214,6 +214,36 @@ public:
         execute(ss.str());
     }
 
+    pqxx::result execute(const std::string& statement)
+    {
+        pqxx::result r;
+        try
+        {
+            pqxx::work w(*c_);
+            r = w.exec(statement);
+            w.commit();
+        } catch (const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+        return r;
+    }
+
+    pqxx::row execute1(const std::string& statement)
+    {
+        pqxx::row r;
+        try
+        {
+            pqxx::work w(*c_);
+            r = w.exec1(statement);
+            w.commit();
+        } catch (const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+        return r;
+    }
+
 protected:
     void connect(YAML::Node connection_config)
     {
@@ -293,37 +323,6 @@ protected:
         pqxx::row row;
         row = execute1(utl::string_format("SELECT t.typname FROM pg_type t WHERE t.oid = %d", oid));
         return row[0].as<std::string>();
-    }
-
-
-    pqxx::result execute(const std::string& statement)
-    {
-        pqxx::result r;
-        try
-        {
-            pqxx::work w(*c_);
-            r = w.exec(statement);
-            w.commit();
-        } catch (const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
-        return r;
-    }
-
-    pqxx::row execute1(const std::string& statement)
-    {
-        pqxx::row r;
-        try
-        {
-            pqxx::work w(*c_);
-            r = w.exec1(statement);
-            w.commit();
-        } catch (const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
-        return r;
     }
 
     void drop_config_yaml(const std::string& output_file)
