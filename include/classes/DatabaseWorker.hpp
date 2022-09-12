@@ -6,6 +6,7 @@
 #include "utl/map_utls.hpp"
 #include <chrono>
 #include <iomanip>
+#include <mutex>
 
 namespace pgi {
 
@@ -217,6 +218,7 @@ public:
     pqxx::result execute(const std::string& statement)
     {
         pqxx::result r;
+        std::lock_guard<std::mutex> guard(mutex_);
         try
         {
             pqxx::work w(*c_);
@@ -232,6 +234,7 @@ public:
     pqxx::row execute1(const std::string& statement)
     {
         pqxx::row r;
+        std::lock_guard<std::mutex> guard(mutex_);
         try
         {
             pqxx::work w(*c_);
@@ -373,6 +376,7 @@ protected:
 
 protected:
     YAML::Node db_config_;
+    std::mutex mutex_;
 };
 
 }  // namespace pgi
