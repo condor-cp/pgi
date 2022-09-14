@@ -17,15 +17,16 @@ public:
     DatabaseWorker(const std::string& connection_file, std::string configuration_file = "")
     {
         // Step 1 : Connection
-        YAML::Node connection_config_root =  YAML::LoadFile(connection_file);
+        YAML::Node connection_config_root = YAML::LoadFile(connection_file);
         YAML::Node connection_config = connection_config_root["connection"];
         connect(connection_config);
+        open_pipeline();
 
         // Step 2 (optionnal): Explore tables
-        if(configuration_file.empty())
+        if (configuration_file.empty())
             configuration_file = connection_file;
         db_config_ = YAML::LoadFile(configuration_file);
-        if(db_config_["tables"])
+        if (db_config_["tables"])
         {
             YAML::Node tables = db_config_["tables"];
             explore_tables(tables);
@@ -46,13 +47,14 @@ public:
         {
             ss << "SELECT \"" << fields[0] << "\"";
             for (size_t i = 1; i < fields.size(); i++)
-                ss << ", " << "\"" << fields[i] << "\"";
+                ss << ", "
+                   << "\"" << fields[i] << "\"";
         }
 
         ss << " FROM " << table_name;
         if (!condition.empty())
             ss << " WHERE " << condition;
-        if(!order_by.empty())
+        if (!order_by.empty())
             ss << " ORDER BY " << order_by;
         ss << " LIMIT " << limit;
         pqxx::result r = execute(ss.str());
@@ -169,7 +171,8 @@ public:
         std::stringstream ss;
         ss << "UPDATE " << table_name << " SET ";
         for (auto const& [key, val] : merged_maps)
-            ss << "\"" << key << "\"" << "=" << val << ", ";
+            ss << "\"" << key << "\""
+               << "=" << val << ", ";
 
         ss.seekp(-2, ss.cur);
         ss << " WHERE " << condition;
@@ -218,12 +221,10 @@ public:
     pqxx::result execute(const std::string& statement)
     {
         pqxx::result r;
-        std::lock_guard<std::mutex> guard(mutex_);
         try
         {
-            pqxx::work w(*c_);
-            r = w.exec(statement);
-            w.commit();
+            pqxx::pipeline::query_id qid = current_pipeline_->insert(statement);
+            r = current_pipeline_->retrieve(qid);
         } catch (const std::exception& e)
         {
             std::cerr << e.what() << '\n';
@@ -233,18 +234,11 @@ public:
 
     pqxx::row execute1(const std::string& statement)
     {
-        pqxx::row r;
-        std::lock_guard<std::mutex> guard(mutex_);
-        try
-        {
-            pqxx::work w(*c_);
-            r = w.exec1(statement);
-            w.commit();
-        } catch (const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
-        return r;
+        pqxx::row row;
+        pqxx::result r = execute(statement);
+        if (std::size(r) > 0)
+            row = r[0];
+        return row;
     }
 
 protected:
@@ -372,7 +366,24 @@ protected:
         explore_tables(db_config_["tables"]);
     }
 
+    void open_pipeline()
+    {
+        try
+        {
+            std::shared_ptr<pqxx::work> work_buff(new pqxx::work(*c_));
+            current_work_ = work_buff;
+            std::shared_ptr<pqxx::pipeline> buff(new pqxx::pipeline(*current_work_));
+            current_pipeline_ = buff;
+        } catch (const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
+
     std::shared_ptr<pqxx::connection> c_;
+    std::shared_ptr<pqxx::pipeline> current_pipeline_;
+    std::shared_ptr<pqxx::work> current_work_;
+    size_t n_connections_;
 
 protected:
     YAML::Node db_config_;

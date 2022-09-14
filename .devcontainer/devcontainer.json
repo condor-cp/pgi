@@ -1,0 +1,16 @@
+{
+    "name": "pgi-dev-cont",
+    // The order of the files is important since later files override previous ones
+    "dockerComposeFile": [
+        "../docker-compose.yml",
+        "docker-compose.extend.yml"
+    ],
+    "service": "pgi",
+    "workspaceFolder": "/libsrc/pgi",
+    "shutdownAction": "stopCompose",
+    "extensions": [
+        "ms-vscode.cpptools",
+        "xaver.clang-format",
+        "ms-vscode.cmake-tools"
+    ]
+}

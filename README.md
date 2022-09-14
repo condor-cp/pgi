@@ -2,6 +2,24 @@
 
 pgi is a header only library built on top of [libpqxx](https://github.com/jtv/libpqxx.git) and [cpp-yaml](https://github.com/jbeder/yaml-cpp.git). It is essentially a wrapper around libpqxx that allows configuration from yaml file and higher level methods interfacing C++ with postgres.
 
+## Example
+
+```
+    DatabaseWorker dbw("database_config.yaml");
+
+    std::map<std::string, double> double_cols;
+    double_cols["test_double1"] = 1.1;
+    
+    std::map<std::string, std::string> string_cols;
+    string_cols["test_string"] = "Hello world!";
+    
+    std::map<std::string, time_point_t> time_cols;
+    time_cols["time"] = tp;
+    
+    dbw.insert_from_maps("public.test_table", double_cols, string_cols, time_cols);
+    dbw.print("public.test_table");
+```
+
 ## Requirements
 
 1. [libpqxx](https://github.com/jtv/libpqxx.git) installed
@@ -58,7 +76,7 @@ target_link_libraries(main pgi)
 
 A minimal working environment (for the sake of example + continuous deployment) can be found in [ci/](ci/). It sets up a minimal postgres database in one container, builds minimal example using pgi in another container and runs it.
 
-```docker-compose up```
+```./run_ci.sh```
 
 Will end with output :  
 

@@ -6,6 +6,10 @@ connection:
   password: mainpassword 
   connect_timeout: 10
 
+meta:
+  open_connections: 12
+
+
 tables:
   - public.test_table
   - public.test_table2
