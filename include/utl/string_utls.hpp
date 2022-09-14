@@ -46,13 +46,13 @@ std::string string_format(std::string fmt, Args&&... args)
 
 
 template <typename T>
-std::string convert_to_string(T val)
+std::string convert_to_string(const T& val)
 {
     return std::to_string(val);
 }
 
 template <typename T>
-std::string convert_to_string(time_point_t val)
+std::string convert_to_string(const time_point_t& val)
 {
     std::stringstream ss;
     ss << "'" << ISO_8601(val) << "'";
@@ -60,11 +60,20 @@ std::string convert_to_string(time_point_t val)
 }
 
 template <typename T>
-std::string convert_to_string(std::string val)
+std::string convert_to_string(const std::string& val)
 {
     std::stringstream ss;
     ss << "'" << val << "'";
     return ss.str();
+}
+
+template <typename T>
+std::vector<std::string> convert_to_string(const std::vector<T>& vals)
+{
+    std::vector<std::string> out;
+    for (auto const& val : vals)
+        out.push_back(convert_to_string<T>(val));
+    return out;
 }
 
 std::string truncate(std::string str, size_t width, bool show_ellipsis = false)

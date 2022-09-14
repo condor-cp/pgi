@@ -163,6 +163,48 @@ public:
         execute(ss.str());
     }
 
+    /// Inserts a row in a defined table from a multiple std::map<std::string, std::vector<T>>.
+    template <typename... Args>
+    void bulk_insert_from_maps(const std::string& table_name, Args... maps)
+    {
+        std::map<std::string, std::vector<std::string>> merged_maps = utl::merge_maps(maps...);
+        std::stringstream columns, ss;
+        std::vector<std::shared_ptr<std::stringstream>> values;
+        size_t bulk_len = merged_maps.begin()->second.size();
+        columns << "(";
+
+        for (size_t i = 0; i < bulk_len; i++)
+        {
+            std::shared_ptr<std::stringstream> valuesss(new std::stringstream());
+            *valuesss << "(";
+            values.push_back(valuesss);
+        }
+
+        for (auto const& [key, val_vec] : merged_maps)
+        {
+            columns << "\"" << key << "\", ";
+            size_t i = 0;
+            for (auto const& val : val_vec)
+            {
+                (*(values[i])) << val << ", ";
+                i++;
+            }
+        }
+        columns.seekp(-2, columns.cur);
+        columns << ")";
+        ss << "INSERT INTO " << table_name << " " << columns.str() << "VALUES ";
+        for (size_t i = 0; i < bulk_len; i++)
+        {
+            (*(values[i])).seekp(-2, (*(values[i])).cur);
+            (*(values[i])) << ")";
+            ss << (*(values[i])).str() << ", ";
+        }
+        ss.seekp(-2, ss.cur);
+        ss << "  ";
+        explore_if_unknown(table_name);
+        execute(ss.str());
+    }
+
     /// Inserts a row in a defined table from a multiple std::map<std::string, T>.
     template <typename... Args>
     void update_from_maps(const std::string& table_name, const std::string& condition, Args... maps)
