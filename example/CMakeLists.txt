@@ -10,4 +10,4 @@ project(pgi_test)
 add_compile_options(-std=c++17 -g -Wall -Wextra -pedantic -fmax-errors=3) 
 
 add_executable(main main.cpp)
-target_link_libraries(main pgi)
+target_link_libraries(main pgi tbb)

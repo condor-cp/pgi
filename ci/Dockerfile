@@ -3,7 +3,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get install -y git sudo g++ cmake 
 RUN apt-get install -y clang-format gdb build-essential
-
+RUN apt-get install -y libtbb-dev
 # Put all the library sources in libsrc
 RUN mkdir /libsrc 
 WORKDIR /libsrc 

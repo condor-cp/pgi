@@ -3,7 +3,7 @@
 #include <pgi.hpp>
 #include "config_dir.hpp"
 #include <chrono>
-
+#include <execution>
 using namespace pgi;
 
 int main()
@@ -55,6 +55,14 @@ int main()
     time_cols_bulk["time"] = {tp, tp - 1s, tp - 2s};
     time_cols_bulk["time2"] = {tp, tp - 5s, tp - 10s};
     dbw.bulk_insert_from_maps("public.test_table3", double_cols_bulk, string_cols_bulk, time_cols_bulk);
+
+    // Test concurrency
+    std::vector<int> vecint(5, 1);
+
+    std::for_each(std::execution::par, vecint.begin(), vecint.end(),
+        [&dbw, double_cols_bulk, string_cols_bulk, time_cols_bulk](int) {
+            dbw.bulk_insert_from_maps("public.test_table3", double_cols_bulk, string_cols_bulk, time_cols_bulk);
+        });
     dbw.print("public.test_table3");
 
     return 0;

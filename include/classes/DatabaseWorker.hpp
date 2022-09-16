@@ -7,6 +7,7 @@
 #include <chrono>
 #include <iomanip>
 #include <mutex>
+#include <thread>
 
 namespace pgi {
 
@@ -265,8 +266,19 @@ public:
         pqxx::result r;
         try
         {
-            pqxx::pipeline::query_id qid = current_pipeline_->insert(statement);
-            r = current_pipeline_->retrieve(qid);
+            pqxx::pipeline::query_id qid;
+            {
+                std::lock_guard<std::mutex> guard(mutex_);
+                qid = current_pipeline_->insert(statement);
+
+                // These line should be out of critical section but
+                // "Got more results from pipeline than there were queries" is raised when executing in parallel
+
+                // while (!current_pipeline_->is_finished(qid)) ==> Doesn't work, always 0 ??!
+                //     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+                r = current_pipeline_->retrieve(qid);
+            }
         } catch (const std::exception& e)
         {
             std::cerr << e.what() << '\n';
