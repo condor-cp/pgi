@@ -281,8 +281,10 @@ public:
             }
         } catch (const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            std::cerr << "\nError : " << e.what() << "was raised while executing the following statement : \n"
+                      << statement << '\n';
         }
+
         return r;
     }
 
