@@ -21,7 +21,6 @@ public:
         YAML::Node connection_config_root = YAML::LoadFile(connection_file);
         YAML::Node connection_config = connection_config_root["connection"];
         connect(connection_config);
-        open_pipeline();
 
         // Step 2 (optionnal): Explore tables
         if (configuration_file.empty())
@@ -264,37 +263,35 @@ public:
     pqxx::result execute(const std::string& statement)
     {
         pqxx::result r;
+        std::lock_guard<std::mutex> guard(mutex_);
         try
         {
-            pqxx::pipeline::query_id qid;
-            {
-                std::lock_guard<std::mutex> guard(mutex_);
-                qid = current_pipeline_->insert(statement);
-
-                // These line should be out of critical section but
-                // "Got more results from pipeline than there were queries" is raised when executing in parallel
-
-                // while (!current_pipeline_->is_finished(qid)) ==> Doesn't work, always 0 ??!
-                //     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-                r = current_pipeline_->retrieve(qid);
-            }
+            pqxx::work w(*c_);
+            r = w.exec(statement);
+            w.commit();
         } catch (const std::exception& e)
         {
             std::cerr << "\nError : " << e.what() << "was raised while executing the following statement : \n"
                       << statement << '\n';
         }
-
         return r;
     }
 
     pqxx::row execute1(const std::string& statement)
     {
-        pqxx::row row;
-        pqxx::result r = execute(statement);
-        if (std::size(r) > 0)
-            row = r[0];
-        return row;
+        pqxx::row r;
+        std::lock_guard<std::mutex> guard(mutex_);
+        try
+        {
+            pqxx::work w(*c_);
+            r = w.exec1(statement);
+            w.commit();
+        } catch (const std::exception& e)
+        {
+            std::cerr << "\nError : " << e.what() << "was raised while executing the following statement : \n"
+                      << statement << '\n';
+        }
+        return r;
     }
 
 protected:
@@ -422,24 +419,7 @@ protected:
         explore_tables(db_config_["tables"]);
     }
 
-    void open_pipeline()
-    {
-        try
-        {
-            std::shared_ptr<pqxx::work> work_buff(new pqxx::work(*c_));
-            current_work_ = work_buff;
-            std::shared_ptr<pqxx::pipeline> buff(new pqxx::pipeline(*current_work_));
-            current_pipeline_ = buff;
-        } catch (const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
-    }
-
     std::shared_ptr<pqxx::connection> c_;
-    std::shared_ptr<pqxx::pipeline> current_pipeline_;
-    std::shared_ptr<pqxx::work> current_work_;
-    size_t n_connections_;
 
 protected:
     YAML::Node db_config_;
