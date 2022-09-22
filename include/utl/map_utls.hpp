@@ -6,7 +6,7 @@
 namespace utl {
 
 template <typename T, typename... Ts>
-std::map<std::string, std::string> merge_maps(std::map<std::string, T> first_map, Ts... others)
+std::map<std::string, std::string> merge_maps(const std::map<std::string, T>& first_map, const Ts&... others)
 {
     std::map<std::string, std::string> final_map;
 
@@ -22,8 +22,8 @@ std::map<std::string, std::string> merge_maps(std::map<std::string, T> first_map
 }
 
 template <typename T, typename... Ts>
-std::map<std::string, std::vector<std::string>> merge_maps(std::map<std::string, std::vector<T>> first_map,
-    Ts... others)
+std::map<std::string, std::vector<std::string>> merge_maps(const std::map<std::string, std::vector<T>>& first_map,
+    const Ts&... others)
 {
     std::map<std::string, std::vector<std::string>> final_map;
 

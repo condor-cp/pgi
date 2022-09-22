@@ -129,7 +129,7 @@ public:
     /// Inserts a row in a defined table from a full set of values.
     /// The order of values must be the same as in the table definition.
     template <typename... Args>
-    void insert(const std::string& table_name, Args... values)
+    void insert(const std::string& table_name, const Args&... values)
     {
         explore_if_unknown(table_name);
         std::stringstream ss;
@@ -166,7 +166,7 @@ public:
 
     /// Inserts a row in a defined table from a multiple std::map<std::string, std::vector<T>>.
     template <typename... Args>
-    void bulk_insert_from_maps(const std::string& table_name, Args... maps)
+    void bulk_insert_from_maps(const std::string& table_name, const Args&... maps)
     {
         std::map<std::string, std::vector<std::string>> merged_maps = utl::merge_maps(maps...);
         std::stringstream columns, ss;
@@ -208,7 +208,7 @@ public:
 
     /// Inserts a row in a defined table from a multiple std::map<std::string, T>.
     template <typename... Args>
-    void update_from_maps(const std::string& table_name, const std::string& condition, Args... maps)
+    void update_from_maps(const std::string& table_name, const std::string& condition, const Args&... maps)
     {
         std::map<std::string, std::string> merged_maps = utl::merge_maps(maps...);
         std::stringstream ss;
