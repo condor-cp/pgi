@@ -51,7 +51,7 @@ std::string convert_to_string(const T& val)
     return std::to_string(val);
 }
 
-template <typename T>
+template <>
 std::string convert_to_string(const time_point_t& val)
 {
     std::stringstream ss;
@@ -59,12 +59,19 @@ std::string convert_to_string(const time_point_t& val)
     return ss.str();
 }
 
-template <typename T>
+template <>
 std::string convert_to_string(const std::string& val)
 {
     std::stringstream ss;
     ss << "'" << val << "'";
     return ss.str();
+}
+
+template <size_t N>
+std::string convert_to_string(const std::array<char, N>& val)
+{
+    std::string str(std::begin(val), std::end(val));
+    return str;
 }
 
 template <typename T>
